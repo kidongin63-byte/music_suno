@@ -1,0 +1,5 @@
+{
+  "name": "Copy of 음악가사만들기 앱.1",
+  "description": "An AI-powered lyrics generation tool that creates complete song lyrics based on genre, mood, theme, and musical style using Gemini 3 Flash.",
+  "requestFramePermissions": []
+}
