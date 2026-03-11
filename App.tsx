@@ -6,17 +6,18 @@ import { GeneratedLyrics, VoiceOption } from './types';
 
 const OPTIONS = {
   targetSubject: [
-    "나 자신", "아내", "남편", "여자친구", "남자친구", 
-    "헤어진 연인", "짝사랑", "썸 타는 사이", "부모님", "아이(자녀)", 
-    "할머니/할아버지", "형제/자매", "친구", "반려동물", "선생님", 
-    "직장동료", "라이벌", "팬(Fan)", "떠난 이(추모)", "미래의 나"
+    "나 자신", "아내", "남편", "여자친구", "남자친구",
+    "헤어진 연인", "짝사랑", "썸 타는 사이", "부모님", "아이(자녀)",
+    "할머니/할아버지", "형제/자매", "친구", "반려동물", "선생님",
+    "직장동료", "라이벌", "팬(Fan)", "떠난 이(추모)", "미래의 나", "직접 쓰기"
   ],
-  genre: ["발라드", "힙합", "록", "팝", "트로트", "R&B", "재즈", "EDM", "포크", "시티팝", "국악 크로스오버", "뉴에이지", "디스코", "블루스", "펑크(Funk)"],
-  theme: ["사랑", "이별", "희망", "우정", "도시의 밤", "여행", "그리움", "청춘", "꿈", "고독", "한(恨)", "가족", "고향", "계절의 변화", "나 자신"],
+  genre: ["발라드", "힙합", "록", "팝", "트로트", "R&B", "재즈", "EDM", "포크", "시티팝", "국악 크로스오버", "뉴에이지", "디스코", "블루스", "펑크(Funk)", "직접 쓰기"],
+  theme: ["사랑", "이별", "희망", "우정", "도시의 밤", "여행", "그리움", "청춘", "꿈", "고독", "한(恨)", "가족", "고향", "계절의 변화", "나 자신", "직접 쓰기"],
   mood: ["신나는", "슬픈", "몽환적인", "열정적인", "차분한", "웅장한", "귀여운", "어두운", "평화로운", "긴장감", "애절한", "아련한", "비장한", "나른한", "상큼한"],
   language: ["한국어", "English", "日本語", "Español", "Français", "Deutsch", "Italiano", "Tiếng Việt", "ภาษาไทย", "Русский"],
-  style: ["90년대 감성", "어쿠스틱", "로우파이", "신스팝", "밴드 사운드", "오케스트라", "미니멀", "그루비한", "빈티지", "트렌디한", "동양적인", "서사적인", "몽글몽글한", "파워풀한", "잔잔한"]
+  style: ["90년대 감성", "어쿠스틱", "로우파이", "신스팝", "밴드 사운드", "오케스트라", "미니멀", "그루비한", "빈티지", "트렌디한", "동양적인", "서사적인", "몽글몽글한", "파워풀한", "잔잔한", "직접 쓰기"]
 };
+
 
 const VOICES: VoiceOption[] = [
   { id: 'f1', name: '서아', gender: 'female', description: '부드러운 발라드', geminiVoice: 'Kore' },
@@ -85,14 +86,14 @@ const App: React.FC = () => {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
-      
+
       const selectedVoice = VOICES.find(v => v.id === form.voiceId);
       const fullText = result.sections.map(s => s.content).join(' ');
       const base64 = await generateAudio(fullText.substring(0, 1000), selectedVoice?.geminiVoice || 'Kore');
-      
+
       const audioData = decodeBase64Audio(base64);
       const audioBuffer = await decodeAudioData(audioData, audioContextRef.current);
-      
+
       const source = audioContextRef.current.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContextRef.current.destination);
@@ -122,19 +123,19 @@ const App: React.FC = () => {
           </span>
         </h1>
         <p className="mt-6 text-gray-400 max-w-xl mx-auto text-lg font-medium tracking-tight leading-relaxed px-4">
-          전 세대의 감성을 아우르는<br/>Suno AI 최적화 프롬프트와 함께 완성하는 나만의 걸작
+          전 세대의 감성을 아우르는<br />Suno AI 최적화 프롬프트와 함께 완성하는 나만의 걸작
         </p>
       </header>
 
       {/* Main Input Box */}
       <main className="relative group p-1">
         <div className="absolute -inset-1.5 bg-gradient-to-r from-indigo-200 via-purple-200 to-rose-200 rounded-[4rem] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-        
+
         <div className="relative bg-white rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.06)] p-8 md:p-12 border border-gray-100 overflow-hidden">
           <div className="space-y-20">
             <div className="grid grid-cols-1 gap-12">
               <InputField label="노래의 주인공 (대상)" icon="👤" value={form.targetSubject} onChange={(v) => setForm({ ...form, targetSubject: v })} options={OPTIONS.targetSubject} colorScheme="rose" />
-              
+
               {/* New Reference Text Input */}
               <div className="flex flex-col space-y-4">
                 <label className="text-base font-bold text-gray-800 flex items-center tracking-tight">
@@ -219,13 +220,13 @@ const App: React.FC = () => {
       {result && (
         <div id="result-section" className="mt-24 bg-white rounded-[4.5rem] shadow-[0_80px_160px_-40px_rgba(0,0,0,0.08)] p-8 md:p-24 border border-gray-50 relative animate-in fade-in slide-in-from-bottom-20 duration-1000">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 opacity-50"></div>
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-4 border-b border-gray-50 pb-12">
             <div className="space-y-8 flex-1">
               <div className="flex flex-wrap gap-2.5">
-                 {[form.targetSubject, form.genre, form.mood, form.style, VOICES.find(v=>v.id===form.voiceId)?.name].map((tag, i) => tag && (
-                   <span key={i} className="px-5 py-2 bg-gray-50 text-gray-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-gray-100">#{tag}</span>
-                 ))}
+                {[form.targetSubject, form.genre, form.mood, form.style, VOICES.find(v => v.id === form.voiceId)?.name].map((tag, i) => tag && (
+                  <span key={i} className="px-5 py-2 bg-gray-50 text-gray-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-gray-100">#{tag}</span>
+                ))}
               </div>
               <h2 className="text-4xl md:text-3xl font-black text-gray-900 tracking-tighter leading-[0.8]">{result.title}</h2>
             </div>
@@ -242,8 +243,8 @@ const App: React.FC = () => {
                 onClick={() => copyToClipboard(`[Title]\n${result.title}\n\n` + result.sections.map(s => `[${s.type}]\n${s.content}`).join('\n\n') + `\n\n[Suno Style]\n${result.stylePrompt}\n[Suno Vocal]\n${result.vocalPrompt}`, "Suno용 전체 텍스트가 복사되었습니다!")}
                 className="flex items-center justify-center gap-4 px-10 py-7 bg-gray-900 hover:bg-black text-white rounded-[2rem] font-black transition-all shadow-xl active:scale-95"
               >
-                가사+프롬프트 복사 
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                가사+프롬프트 복사
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
               </button>
             </div>
           </div>
@@ -251,16 +252,16 @@ const App: React.FC = () => {
           {/* Suno Console Style Prompt Box */}
           <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-10 bg-[#121212] text-white rounded-[3rem] shadow-2xl relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-8 opacity-10 scale-[1.5] group-hover:rotate-12 transition-transform"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
-               <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Suno Music Style</h3>
-               <p className="text-xl font-bold tracking-tight mb-8 leading-relaxed text-gray-100">{result.stylePrompt}</p>
-               <button onClick={() => copyToClipboard(result.stylePrompt, "스타일 프롬프트가 복사되었습니다!")} className="text-xs font-black px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">Style Copy</button>
+              <div className="absolute top-0 right-0 p-8 opacity-10 scale-[1.5] group-hover:rotate-12 transition-transform"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>
+              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Suno Music Style</h3>
+              <p className="text-xl font-bold tracking-tight mb-8 leading-relaxed text-gray-100">{result.stylePrompt}</p>
+              <button onClick={() => copyToClipboard(result.stylePrompt, "스타일 프롬프트가 복사되었습니다!")} className="text-xs font-black px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">Style Copy</button>
             </div>
             <div className="p-10 bg-[#121212] text-white rounded-[3rem] shadow-2xl relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-8 opacity-10 scale-[1.5] group-hover:rotate-12 transition-transform"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm0-10h2v8h-2V6z"/></svg></div>
-               <h3 className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-4">Suno Vocal Description</h3>
-               <p className="text-xl font-bold tracking-tight mb-8 leading-relaxed text-gray-100">{result.vocalPrompt}</p>
-               <button onClick={() => copyToClipboard(result.vocalPrompt, "보컬 프롬프트가 복사되었습니다!")} className="text-xs font-black px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">Vocal Copy</button>
+              <div className="absolute top-0 right-0 p-8 opacity-10 scale-[1.5] group-hover:rotate-12 transition-transform"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm0-10h2v8h-2V6z" /></svg></div>
+              <h3 className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-4">Suno Vocal Description</h3>
+              <p className="text-xl font-bold tracking-tight mb-8 leading-relaxed text-gray-100">{result.vocalPrompt}</p>
+              <button onClick={() => copyToClipboard(result.vocalPrompt, "보컬 프롬프트가 복사되었습니다!")} className="text-xs font-black px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">Vocal Copy</button>
             </div>
           </div>
 

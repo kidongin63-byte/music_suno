@@ -4,7 +4,7 @@ import { LyricsRequest, GeneratedLyrics } from "../types";
 
 export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLyrics> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+
   const prompt = `Create professional song lyrics and AI music generator prompts.
     IMPORTANT: All Korean text must be encoded in UTF-8. 
     
@@ -32,7 +32,7 @@ export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLy
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -70,10 +70,10 @@ export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLy
 
 export const generateAudio = async (text: string, voiceName: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
+      model: "gemini-1.5-flash",
       contents: [{ parts: [{ text: `Expressively narrate these lyrics with a musical soul: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
