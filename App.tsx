@@ -13,8 +13,8 @@ const OPTIONS = {
   ],
   genre: ["발라드", "힙합", "록", "팝", "트로트", "R&B", "재즈", "EDM", "포크", "시티팝", "국악 크로스오버", "뉴에이지", "디스코", "블루스", "펑크(Funk)", "직접 쓰기"],
   theme: ["사랑", "이별", "희망", "우정", "도시의 밤", "여행", "그리움", "청춘", "꿈", "고독", "한(恨)", "가족", "고향", "계절의 변화", "나 자신", "직접 쓰기"],
-  mood: ["신나는", "슬픈", "몽환적인", "열정적인", "차분한", "웅장한", "귀여운", "어두운", "평화로운", "긴장감", "애절한", "아련한", "비장한", "나른한", "상큼한"],
-  language: ["한국어", "English", "日本語", "Español", "Français", "Deutsch", "Italiano", "Tiếng Việt", "ภาษาไทย", "Русский"],
+  mood: ["신나는", "슬픈", "몽환적인", "열정적인", "차분한", "웅장한", "귀여운", "어두운", "평화로운", "긴장감", "애절한", "아련한", "비장한", "나른한", "상큼한", "직접 쓰기"],
+  language: ["한국어", "English", "日本語", "Español", "Français", "Deutsch", "Italiano", "Tiếng Việt", "ภาษาไทย", "Русский", "직접 쓰기"],
   style: ["90년대 감성", "어쿠스틱", "로우파이", "신스팝", "밴드 사운드", "오케스트라", "미니멀", "그루비한", "빈티지", "트렌디한", "동양적인", "서사적인", "몽글몽글한", "파워풀한", "잔잔한", "직접 쓰기"]
 };
 
@@ -212,6 +212,11 @@ const App: React.FC = () => {
                 </>
               )}
             </button>
+            {error && (
+              <div className="mt-8 p-4 bg-rose-50 border-2 border-rose-200 rounded-2xl text-rose-600 font-bold text-center animate-in zoom-in-95 duration-300 shadow-sm max-w-2xl mx-auto">
+                <span className="text-xl mr-2">⚠️</span> {error}
+              </div>
+            )}
           </div>
         </div>
       </main>

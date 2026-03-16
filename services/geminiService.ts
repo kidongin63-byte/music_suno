@@ -3,6 +3,10 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { LyricsRequest, GeneratedLyrics } from "../types";
 
 export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLyrics> => {
+  if (!process.env.API_KEY) {
+    throw new Error("API 키가 설정되지 않았습니다. .env.local 파일을 확인해주세요.");
+  }
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `Create professional song lyrics and AI music generator prompts.
@@ -32,48 +36,39 @@ export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLy
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            stylePrompt: { type: Type.STRING },
-            vocalPrompt: { type: Type.STRING },
-            sections: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  type: { type: Type.STRING },
-                  content: { type: Type.STRING }
-                },
-                required: ["type", "content"]
-              }
-            },
-            explanation: { type: Type.STRING }
-          },
-          required: ["title", "sections", "stylePrompt", "vocalPrompt"]
-        }
       }
     });
 
-    const resultText = response.text || "{}";
+    let resultText = response.text || "{}";
+    
+    // Fallback: Remove markdown code blocks if Gemini returns them despite responseMimeType
+    if (resultText.startsWith('```json')) {
+      resultText = resultText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (resultText.startsWith('```')) {
+      resultText = resultText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
     return JSON.parse(resultText) as GeneratedLyrics;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
-    throw new Error("가사와 프롬프트를 생성하는 중에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    throw new Error(error.message || "가사와 프롬프트를 생성하는 중에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
   }
 };
 
 export const generateAudio = async (text: string, voiceName: string): Promise<string> => {
+  if (!process.env.API_KEY) {
+    throw new Error("API 키가 설정되지 않았습니다. .env.local 파일을 확인해주세요.");
+  }
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ parts: [{ text: `Expressively narrate these lyrics with a musical soul: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],

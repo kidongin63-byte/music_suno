@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 
 interface InputFieldProps {
   label: string;
@@ -11,12 +10,20 @@ interface InputFieldProps {
   colorScheme?: 'indigo' | 'purple' | 'orange' | 'emerald' | 'rose';
 }
 
-const colorMap = {
-  indigo: 'from-indigo-600 to-blue-500 shadow-indigo-200 border-indigo-100 bg-indigo-50 text-indigo-700',
-  purple: 'from-purple-600 to-fuchsia-500 shadow-purple-200 border-purple-100 bg-purple-50 text-purple-700',
-  orange: 'from-orange-500 to-amber-400 shadow-orange-200 border-orange-100 bg-orange-50 text-orange-700',
-  emerald: 'from-emerald-500 to-teal-400 shadow-emerald-200 border-emerald-100 bg-emerald-50 text-emerald-700',
-  rose: 'from-rose-500 to-pink-400 shadow-rose-200 border-rose-100 bg-rose-50 text-rose-700',
+const unselectedClasses = {
+  indigo: 'hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-sm',
+  purple: 'hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 hover:shadow-sm',
+  orange: 'hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 hover:shadow-sm',
+  emerald: 'hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm',
+  rose: 'hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:shadow-sm',
+};
+
+const selectedClasses = {
+  indigo: 'bg-gradient-to-r from-indigo-600 to-blue-500 shadow-indigo-200 shadow-lg text-white border-transparent -translate-y-1 scale-105',
+  purple: 'bg-gradient-to-r from-purple-600 to-fuchsia-500 shadow-purple-200 shadow-lg text-white border-transparent -translate-y-1 scale-105',
+  orange: 'bg-gradient-to-r from-orange-500 to-amber-400 shadow-orange-200 shadow-lg text-white border-transparent -translate-y-1 scale-105',
+  emerald: 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-emerald-200 shadow-lg text-white border-transparent -translate-y-1 scale-105',
+  rose: 'bg-gradient-to-r from-rose-500 to-pink-400 shadow-rose-200 shadow-lg text-white border-transparent -translate-y-1 scale-105',
 };
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -28,12 +35,40 @@ const InputField: React.FC<InputFieldProps> = ({
   tooltip,
   colorScheme = 'indigo'
 }) => {
-  const activeStyles = colorMap[colorScheme];
-  const [bgGrad, shadow, border, lightBg, text] = activeStyles.split(' ');
+  const [isTypingCustom, setIsTypingCustom] = useState(false);
 
-  // 이 항목이 '직접 쓰기' 상태인지 확인 (제공된 옵션 목록에 없고 빈값이 아닌 경우)
-  const isDirectInput = value !== '' && !options.filter(opt => opt !== '직접 쓰기').includes(value);
-  const showCustomInput = value === '직접 쓰기' || isDirectInput;
+  const isDirectInput = isTypingCustom || (value !== '' && !options.filter(opt => opt !== '직접 쓰기').includes(value));
+
+  const handleCustomActivate = () => {
+    setIsTypingCustom(true);
+    if (!isDirectInput && value !== '직접 쓰기') {
+       onChange(''); // clear value initially when activated
+    }
+  };
+
+  const ringStyles = {
+    indigo: 'focus:ring-indigo-100',
+    purple: 'focus:ring-purple-100',
+    orange: 'focus:ring-orange-100',
+    emerald: 'focus:ring-emerald-100',
+    rose: 'focus:ring-rose-100'
+  };
+
+  const textStyles = {
+    indigo: 'text-indigo-700',
+    purple: 'text-purple-700',
+    orange: 'text-orange-700',
+    emerald: 'text-emerald-700',
+    rose: 'text-rose-700'
+  }
+
+  const borderStyles = {
+    indigo: 'border-indigo-100',
+    purple: 'border-purple-100',
+    orange: 'border-orange-100',
+    emerald: 'border-emerald-100',
+    rose: 'border-rose-100'
+  }
 
   return (
     <div className="flex flex-col space-y-4">
@@ -54,16 +89,22 @@ const InputField: React.FC<InputFieldProps> = ({
 
       <div className="flex flex-wrap gap-2.5">
         {options.map((option) => {
-          // '직접 쓰기' 버튼의 경우, 실제 value가 '직접 쓰기'이거나 옵션 목록에 없는 커스텀 값일 때 선택된 것으로 표시
-          const isSelected = option === '직접 쓰기' ? showCustomInput : value === option;
+          const isSelected = option === '직접 쓰기' ? isDirectInput : (!isTypingCustom && value === option);
 
           return (
             <button
               key={option}
-              onClick={() => onChange(option)}
+              onClick={() => {
+                if (option === '직접 쓰기') {
+                  handleCustomActivate();
+                } else {
+                  setIsTypingCustom(false);
+                  onChange(option);
+                }
+              }}
               className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border-2 ${isSelected
-                  ? `bg-gradient-to-r ${bgGrad} text-white border-transparent shadow-lg ${shadow} -translate-y-1 scale-105`
-                  : `bg-white text-gray-500 border-gray-100 hover:border-${colorScheme}-200 hover:${lightBg} hover:${text} hover:shadow-sm`
+                  ? selectedClasses[colorScheme]
+                  : `bg-white text-gray-500 border-gray-100 ${unselectedClasses[colorScheme]}`
                 }`}
             >
               {option}
@@ -72,7 +113,7 @@ const InputField: React.FC<InputFieldProps> = ({
         })}
       </div>
 
-      {showCustomInput && (
+      {isDirectInput && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="relative">
             <input
@@ -81,9 +122,9 @@ const InputField: React.FC<InputFieldProps> = ({
               placeholder={`${label} 내용을 직접 입력해주세요`}
               value={value === '직접 쓰기' ? '' : value}
               onChange={(e) => onChange(e.target.value)}
-              className={`w-full p-4 rounded-2xl border-2 ${border} bg-white text-gray-700 text-sm font-bold focus:ring-4 focus:ring-${colorScheme}-100 focus:outline-none transition-all shadow-inner`}
+              className={`w-full p-4 rounded-2xl border-2 ${borderStyles[colorScheme]} bg-white text-gray-700 text-sm font-bold focus:ring-4 ${ringStyles[colorScheme]} focus:outline-none transition-all shadow-inner`}
             />
-            <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black ${text} uppercase tracking-widest`}>
+            <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black ${textStyles[colorScheme]} uppercase tracking-widest`}>
               Custom Input
             </div>
           </div>
