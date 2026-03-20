@@ -23,28 +23,39 @@ export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLy
     User's Story/Reference Text: "${params.referenceText || "None provided"}"
 
     Requirements:
-    1. Title: Creative title in the requested language.
-    2. Sections: Standard song structure (Intro, Verse, Chorus, Bridge, Outro).
+    1. title: Creative title in the requested language.
+    2. sections: Generate an array of objects representing the song structure (Intro, Verse, Chorus, Bridge, Outro). Each object MUST have "type" (the section name) and "content" (the actual lyrics for that section in the requested language).
     3. stylePrompt (English): 5-10 comma-separated keywords for Suno/Udio (e.g., "K-Pop, Future Bass, Synthesizers, Upbeat, 128BPM").
     4. vocalPrompt (English): Specific vocal description for Suno/Udio (e.g., "Emotional female vocals, airy, soul-searching, expressive").
     5. explanation (Korean): Brief insight into the song's meaning in Korean.
     
     CRITICAL INSTRUCTION FOR LYRICS:
-    If "User's Story/Reference Text" is provided, you MUST incorporate its key phrases, specific imagery, and underlying emotion into the lyrics. Do not just copy it, but adapt it artistically into the song structure.
+    - You MUST write the actual lyrics for each section.
+    - If "User's Story/Reference Text" is provided, you MUST incorporate its key phrases, specific imagery, and underlying emotion into the lyrics. Do not just copy it, but adapt it artistically into the song structure.
+    - Ensure the lyrics flow well and match the requested genre, mood, and style.
 
-    Response must be a valid JSON.`;
+    Response must be a valid JSON matching this structure:
+    {
+      "title": "string",
+      "sections": [
+        { "type": "string", "content": "string" }
+      ],
+      "stylePrompt": "string",
+      "vocalPrompt": "string",
+      "explanation": "string"
+    }`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents: [{ parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
       }
     });
 
     let resultText = response.text || "{}";
-    
+
     // Fallback: Remove markdown code blocks if Gemini returns them despite responseMimeType
     if (resultText.startsWith('```json')) {
       resultText = resultText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -52,7 +63,14 @@ export const generateLyrics = async (params: LyricsRequest): Promise<GeneratedLy
       resultText = resultText.replace(/^```\s*/, '').replace(/\s*```$/, '');
     }
 
-    return JSON.parse(resultText) as GeneratedLyrics;
+    const parsed = JSON.parse(resultText) as GeneratedLyrics;
+
+    // Ensure sections is always an array to avoid frontend crashes
+    if (!parsed.sections || !Array.isArray(parsed.sections)) {
+      parsed.sections = [];
+    }
+
+    return parsed;
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     throw new Error(error.message || "가사와 프롬프트를 생성하는 중에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
@@ -104,15 +122,21 @@ export async function decodeAudioData(
   sampleRate: number = 24000,
   numChannels: number = 1,
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+  try {
+    // Try browser-native decoding first (works if it's a standard format like WAV)
+    return await ctx.decodeAudioData(data.buffer.slice(0) as ArrayBuffer);
+  } catch (error) {
+    // Fallback to manual Int16 decoding if it's raw PCM
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    for (let channel = 0; channel < numChannels; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      for (let i = 0; i < frameCount; i++) {
+        channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+      }
     }
+    return buffer;
   }
-  return buffer;
 }

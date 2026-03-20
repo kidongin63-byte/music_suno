@@ -61,6 +61,7 @@ const App: React.FC = () => {
   });
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -69,9 +70,12 @@ const App: React.FC = () => {
       const selectedVoice = VOICES.find(v => v.id === form.voiceId);
       const lyrics = await generateLyrics({ ...form, voice: selectedVoice?.description });
       setResult(lyrics);
-      setTimeout(() => {
-        document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      requestAnimationFrame(() => {
+        const element = document.getElementById('result-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
     } catch (err: any) {
       setError(err.message || "오류가 발생했습니다.");
     } finally {
@@ -94,10 +98,18 @@ const App: React.FC = () => {
       const audioData = decodeBase64Audio(base64);
       const audioBuffer = await decodeAudioData(audioData, audioContextRef.current);
 
+      // Stop existing audio if playing
+      if (audioSourceRef.current) {
+        try {
+          audioSourceRef.current.stop();
+        } catch (e) { /* ignore */ }
+      }
+
       const source = audioContextRef.current.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContextRef.current.destination);
       source.start();
+      audioSourceRef.current = source;
     } catch (err) {
       alert("오디오 재생 중 오류가 발생했습니다.");
     } finally {
@@ -245,7 +257,7 @@ const App: React.FC = () => {
                 <span className="text-2xl">▶️</span>
               </button>
               <button
-                onClick={() => copyToClipboard(`[Title]\n${result.title}\n\n` + result.sections.map(s => `[${s.type}]\n${s.content}`).join('\n\n') + `\n\n[Suno Style]\n${result.stylePrompt}\n[Suno Vocal]\n${result.vocalPrompt}`, "Suno용 전체 텍스트가 복사되었습니다!")}
+                onClick={() => copyToClipboard(`[Title]\n${result.title}\n\n` + (result.sections || []).map(s => `[${s.type}]\n${s.content}`).join('\n\n') + `\n\n[Suno Style]\n${result.stylePrompt}\n[Suno Vocal]\n${result.vocalPrompt}`, "Suno용 전체 텍스트가 복사되었습니다!")}
                 className="flex items-center justify-center gap-4 px-10 py-7 bg-gray-900 hover:bg-black text-white rounded-[2rem] font-black transition-all shadow-xl active:scale-95"
               >
                 가사+프롬프트 복사
@@ -271,7 +283,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="space-y-8">
-            {result.sections.map((section, idx) => (
+            {(result.sections || []).map((section, idx) => (
               <div key={idx} className="group relative text-center">
                 <div className="text-[11px] font-black text-indigo-400/30 tracking-[1em] uppercase mb-2 flex items-center justify-center">
                   <div className="h-[2px] w-24 bg-gradient-to-r from-transparent to-indigo-50 mr-10"></div>
